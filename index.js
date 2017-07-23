@@ -15,6 +15,7 @@ function State(automait, logger, config) {
   this.logger = logger
   this.config = config
   this.client = new Socket(config.connString)
+  this.previousState = null
   this.state = null
 }
 
@@ -33,12 +34,22 @@ State.prototype.getState = function (cb) {
   cb(null, this.state)
 }
 
+State.prototype.getPreviousState = function (cb) {
+  cb(null, this.previousState)
+}
+
+State.prototype.setToPreviousState = function (cb) {
+  this.client.send('changeState', this.previousState)
+  cb()
+}
+
 function startListening() {
   this.client.on('state', function (state) {
     var currentState = this.state
-    this.state = state
     if (currentState && currentState !== state) {
+      this.previousState = currentState
       this.emit(state)
     }
+    this.state = state
   }.bind(this))
 }
